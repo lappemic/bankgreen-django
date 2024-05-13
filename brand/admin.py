@@ -12,6 +12,7 @@ from django_admin_listfilter_dropdown.filters import ChoiceDropdownFilter
 
 from brand.admin_utils import (
     LinkedDatasourcesFilter,
+    link_brand,
     link_datasources,
     raise_validation_error_for_missing_country,
     raise_validation_error_for_missing_region,
@@ -396,3 +397,9 @@ class ContactAdmin(admin.ModelAdmin):
     fields = ["fullname", "email", "commentary"]
     readonly_fields = ["brand_tag", "brand_name"]
     search_fields = ["email"]
+
+    @admin.display(description="Brand")
+    def brand_link(self, obj):
+        if obj.commentary:
+            return link_brand(obj.commentary.brand)
+        return "No Brand Linked"

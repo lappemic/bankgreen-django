@@ -37,6 +37,14 @@ def link_datasources(datasources, datasource_str):
     return links
 
 
+def link_brand(brand):
+    if brand is not None:
+        url = reverse("admin:brand_brand_change", args=(brand.id,))
+        brand_name = escape(brand.name)
+        return format_html(f'<a href="{url}">{brand_name}</a>')
+    return "No Brand Linked"
+
+
 def raise_validation_error_for_missing_country(self):
     regions_qs = self.cleaned_data.get("regions", Region.objects.none())
     expected_country_ids = set([x["country_id"] for x in regions_qs.values()])
