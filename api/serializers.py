@@ -48,6 +48,9 @@ class BrandSuggestionSerializer(serializers.ModelSerializer):
 
 
 class ContactSerializer(serializers.ModelSerializer):
+    brand_tag = serializers.CharField(read_only=True, source="brand_tag")
+    brand_name = serializers.CharField(read_only=True, source="brand_name")
+
     class Meta:
         model = Contact
-        fields = ["fullname", "email", "brand_tag"]
+        fields = ["id", "fullname", "email", "brand_tag", "brand_name"]
