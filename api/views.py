@@ -40,7 +40,6 @@ class BrandSuggestionAPIView(APIView):
 class ContactView(APIView):
     permission_classes = []
     authentication_classes = [SingleTokenAuthentication]
-    renderer_classes = [JSONRenderer]
 
     def get(self, request):
         brand_tag = request.query_params.get("brandTag")
