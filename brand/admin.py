@@ -27,8 +27,9 @@ from .models import Brand, Commentary, Contact
 
 from django.core.exceptions import ObjectDoesNotExist
 from brand.forms import EmbraceCampaignForm
-from nested_admin import NestedStackedInline, NestedModelAdmin
+from nested_admin import NestedStackedInline
 from django import forms
+from reversion.admin import VersionAdmin
 
 
 class ContactForm(forms.ModelForm):
@@ -55,57 +56,6 @@ class ContactForm(forms.ModelForm):
             )
 
 
-class ContactInline(NestedStackedInline):
-    model = Contact
-    exclude = ["fullname"]
-    extra = 0
-    form = ContactForm
-
-    def get_max_num(self, request, obj=None, **kwargs):
-        return 1
-
-    def has_add_permission(self, request, obj=None):
-        return False
-
-    def has_delete_permission(self, request, obj=None):
-        return False
-
-
-class CommentaryInline(NestedStackedInline):
-    fk_name = "brand"
-    model = Commentary
-    extra = 0
-    inlines = [ContactInline]
-    autocomplete_fields = ["inherit_brand_rating"]
-    readonly_fields = ("rating_inherited", "subtitle", "header", "summary", "details")
-    fieldsets = (
-        (
-            "Display Configuration",
-            {
-                "fields": (
-                    (
-                        "display_on_website",
-                        "fossil_free_alliance",
-                        "top_pick",
-                        "number_of_requests",
-                    ),
-                    ("rating", "show_on_sustainable_banks_page"),
-                    ("rating_inherited", "inherit_brand_rating"),
-                    ("embrace_campaign"),
-                )
-            },
-        ),
-        ("Used for negatively rated banks", {"fields": (("amount_financed_since_2016",))}),
-        (
-            "Used for positively rated banks",
-            {"fields": (("from_the_website",), ("institution_type", "institution_credentials"))},
-        ),
-        ("CMS", {"fields": (("subtitle",), ("header",), ("summary",), ("details",))}),
-        ("Meta", {"fields": ("comment",)}),
-    )
-
-
-# class BrandFeaturesInline(admin.StackedInline):
 class BrandFeaturesInline(NestedStackedInline):
     model = BrandFeature
     fields = (("feature", "details"),)
@@ -117,8 +67,7 @@ class BrandFeaturesInline(NestedStackedInline):
 
 
 # TODO make this a series of dropdowns
-# class DatasourceInline(admin.StackedInline):
-class DatasourceInline(NestedStackedInline):
+class DatasourceInline(admin.StackedInline):
     model = Datasource
     extra = 0
 
@@ -239,9 +188,17 @@ class InstitutionCredentials(admin.ModelAdmin):
 # @admin.register(Brand)
 # class BrandAdmin(VersionAdmin):
 @admin.register(Brand)
-class BrandAdmin(NestedModelAdmin):
+class BrandAdmin(VersionAdmin):
     form = CountriesWidgetOverrideForm
     change_list_template = "change_list_template.html"
+
+    @admin.display(description="contact details")
+    def contact_details(self, obj):
+        contacts = obj.commentary.contact_set.all() if obj.commentary else []
+        if contacts:
+            links = [link_brand(contact.commentary.brand) for contact in contacts]
+            return format_html("<br />".join(links))
+        return "No contact details linked, why don't you add one?"
 
     @admin.display(description="related datasources")
     def related_datasources(self, obj):
@@ -312,13 +269,14 @@ class BrandAdmin(NestedModelAdmin):
         "website",
         "num_linked",
         "num_suggest",
+        "contact_details",
     )
     list_display_links = ("short_name", "short_tag")
     # list_editable=('website',)
 
     list_per_page = 800
 
-    inlines = [CommentaryInline, BrandFeaturesInline, DatasourceInline]
+    # inlines = [CommentaryInline, BrandFeaturesInline, DatasourceInline]
 
     def save_model(self, request, obj, form, change):
         """
