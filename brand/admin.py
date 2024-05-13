@@ -22,14 +22,12 @@ from brand.models.features import BrandFeature, FeatureType
 from brand.models.embrace_campaign import EmbraceCampaign
 from datasource.constants import model_names
 from datasource.models.datasource import Datasource, SuggestedAssociation
-from django.contrib.admin.widgets import ForeignKeyRawIdWidget
 from .models import Brand, Commentary, Contact
 
 from django.core.exceptions import ObjectDoesNotExist
 from brand.forms import EmbraceCampaignForm
 from nested_admin import NestedStackedInline, NestedModelAdmin
 from django import forms
-from taggit.forms import TagWidget
 
 
 class ContactForm(forms.ModelForm):
